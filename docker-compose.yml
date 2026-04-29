@@ -1,0 +1,100 @@
+# ══════════════════════════════════════════════════════════
+# docker-compose.yml — AI Chat Assistant Pro
+# Services: Node.js backend + MongoDB + Redis
+# ══════════════════════════════════════════════════════════
+
+version: "3.9"
+
+services:
+
+  # ── Node.js Backend ─────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: aichat_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/ai_chat_app
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
+      - LOG_LEVEL=info
+      - RATE_LIMIT_MAX=100
+      - RATE_LIMIT_WINDOW_MS=60000
+    volumes:
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aichat_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── MongoDB ─────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    container_name: aichat_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=ai_chat_app
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - aichat_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Redis ────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: aichat_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - aichat_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+# ── Named Volumes ────────────────────────────────────────
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  logs_data:
+    driver: local
+
+# ── Network ──────────────────────────────────────────────
+networks:
+  aichat_network:
+    driver: bridge

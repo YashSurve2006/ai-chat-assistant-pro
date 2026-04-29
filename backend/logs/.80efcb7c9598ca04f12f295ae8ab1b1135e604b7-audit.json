@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "J:\\AI CHATBOT\\ai-chat-app\\backend\\logs\\.80efcb7c9598ca04f12f295ae8ab1b1135e604b7-audit.json",
+    "files": [
+        {
+            "date": 1777018596807,
+            "name": "J:\\AI CHATBOT\\ai-chat-app\\backend\\logs\\app-2026-04-24.log",
+            "hash": "e4ccc82c6355d48da34606a4714bb16c6ccdd2b69cdb894e7ee3633f6040d49e"
+        },
+        {
+            "date": 1777438219494,
+            "name": "J:\\AI CHATBOT\\ai-chat-app\\backend\\logs\\app-2026-04-29.log",
+            "hash": "cd5b3e85eeb95dd143436a90dbda0d2c50dc2b93340577fbeac05c70d16535a6"
+        }
+    ],
+    "hashType": "sha256"
+}

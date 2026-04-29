@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="AI Chat Pro — Advanced Local AI Assistant powered by Ollama and modern real-time streaming." />
+  <title>AI Chat Pro</title>
+
+  <!-- FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- MARKDOWN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+
+  <!-- SYNTAX HIGHLIGHT -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- SANITIZER -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+  <!-- SOCKET -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       APP LOADER
+  ══════════════════════════════════════════════════════════ -->
+  <div id="app-loader" class="app-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Starting AI Engine…</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIDEBAR OVERLAY
+  ══════════════════════════════════════════════════════════ -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════════════════════════════ -->
+  <aside id="sidebar" class="sidebar" role="complementary" aria-label="Chat history">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon-wrap">
+          <div class="logo-dot"></div>
+        </div>
+        <div class="logo-text-wrap">
+          <span class="sidebar-brand">AI Chat Pro</span>
+          <span class="sidebar-version">Local AI · Ollama</span>
+        </div>
+      </div>
+      <button id="sidebar-close-btn" class="icon-btn sidebar-close-btn" aria-label="Close sidebar"
+        style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="1" y1="1" x2="13" y2="13" />
+          <line x1="13" y1="1" x2="1" y2="13" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- New Chat -->
+    <button id="new-chat-btn" class="new-chat-btn">
+      <span class="btn-icon">＋</span>
+      <span>New Chat</span>
+      <kbd>Ctrl+N</kbd>
+    </button>
+
+    <!-- Search -->
+    <div class="sidebar-search-wrap">
+      <input type="search" id="conv-search" class="sidebar-search" placeholder="Search conversations…"
+        autocomplete="off" />
+    </div>
+
+    <!-- Toolbar -->
+    <div class="sidebar-toolbar">
+      <button id="sort-btn" class="tool-btn" title="Sort conversations">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" style="display:inline;margin-right:3px;vertical-align:middle;">
+          <line x1="2" y1="4" x2="14" y2="4" />
+          <line x1="4" y1="8" x2="12" y2="8" />
+          <line x1="6" y1="12" x2="10" y2="12" />
+        </svg>
+        Sort
+      </button>
+      <button id="filter-btn" class="tool-btn" title="Filter conversations">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" style="display:inline;margin-right:3px;vertical-align:middle;">
+          <polygon points="1,1 15,1 9,9 9,15 7,15 7,9" />
+        </svg>
+        Filter
+      </button>
+      <button id="archive-btn" class="tool-btn" title="Archive">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" style="display:inline;margin-right:3px;vertical-align:middle;">
+          <rect x="1" y="1" width="14" height="4" rx="1" />
+          <path d="M2 5v8a1 1 0 001 1h10a1 1 0 001-1V5" />
+          <line x1="6" y1="9" x2="10" y2="9" />
+        </svg>
+        Archive
+      </button>
+    </div>
+
+    <!-- Section label -->
+    <div class="sidebar-section-label">Recent Conversations</div>
+
+    <!-- Conversations List -->
+    <nav id="conversations-list" class="conversations-list" aria-label="Chat sessions">
+      <!-- Empty state shown by default -->
+      <div class="sidebar-empty">
+        <div class="sidebar-empty-icon">💬</div>
+        <div class="sidebar-empty-text">No conversations yet.<br>Start a new chat to begin.</div>
+      </div>
+    </nav>
+
+    <!-- Quick Actions -->
+    <div class="sidebar-quick-actions">
+      <button id="clear-all-btn" class="danger-btn">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" style="display:inline;margin-right:4px;vertical-align:middle;">
+          <polyline points="3,6 4,14 12,14 13,6" />
+          <line x1="1" y1="6" x2="15" y2="6" />
+          <path d="M6 6V4a1 1 0 011-1h2a1 1 0 011 1v2" />
+        </svg>
+        Clear All
+      </button>
+      <button id="export-btn" class="action-btn">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" style="display:inline;margin-right:4px;vertical-align:middle;">
+          <path d="M8 2v9M5 8l3 3 3-3" />
+          <rect x="2" y="12" width="12" height="2" rx="1" />
+        </svg>
+        Export
+      </button>
+    </div>
+
+    <!-- Storage -->
+    <div class="sidebar-storage">
+      <div class="storage-label">Storage</div>
+      <div class="storage-bar">
+        <div class="storage-fill" id="storage-fill"></div>
+      </div>
+      <div class="storage-text" id="storage-text">0 MB used</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-info-block" id="user-info-block">
+        <div class="user-avatar" id="user-avatar">US</div>
+        <div class="user-details">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-email" id="user-email">user@local.ai</div>
+        </div>
+        <div class="user-actions">
+          <button id="settings-btn" class="icon-btn" title="Settings" style="width:28px;height:28px;font-size:0.85rem;">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round">
+              <circle cx="10" cy="10" r="3" />
+              <path
+                d="M10 2a1 1 0 00-1 1v1.07A7 7 0 003.07 9H2a1 1 0 000 2h1.07A7 7 0 009 16.93V18a1 1 0 002 0v-1.07A7 7 0 0016.93 11H18a1 1 0 000-2h-1.07A7 7 0 0011 4.07V3a1 1 0 00-1-1z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button id="logout-btn" class="logout-btn">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3" />
+          <polyline points="11,5 14,8 11,11" />
+          <line x1="14" y1="8" x2="6" y2="8" />
+        </svg>
+        Sign Out
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════
+       APP SHELL
+  ══════════════════════════════════════════════════════════ -->
+  <div class="app-shell" id="app-shell">
+
+    <!-- ══════════════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════════════ -->
+    <header class="app-header" role="banner">
+      <div class="header-inner">
+
+        <!-- Left -->
+        <div class="header-left">
+          <button id="sidebar-toggle-btn" class="icon-btn" title="Toggle sidebar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round">
+              <line x1="1" y1="3" x2="15" y2="3" />
+              <line x1="1" y1="8" x2="15" y2="8" />
+              <line x1="1" y1="13" x2="15" y2="13" />
+            </svg>
+          </button>
+          <div class="brand">
+            <div class="brand-logo-wrap">
+              <div class="logo-dot"></div>
+            </div>
+            <div>
+              <h1 class="app-title">AI Chat Pro</h1>
+              <p id="current-chat-title" class="app-subtitle">New Conversation</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <nav class="header-actions" aria-label="Header actions">
+
+          <!-- Workspace Switcher -->
+          <select id="workspace-selector" class="workspace-selector" title="Switch workspace">
+            <option value="default" selected>Default Workspace</option>
+            <option value="project">Project Workspace</option>
+            <option value="research">Research Workspace</option>
+          </select>
+
+          <!-- Model Selector -->
+          <select id="model-selector" class="model-selector" title="Select AI model">
+            <option value="llama3" selected>🧠 llama3</option>
+            <option value="mistral">⚡ mistral</option>
+            <option value="phi">💡 phi</option>
+            <option value="mixtral">🚀 mixtral</option>
+          </select>
+
+          <!-- System Status -->
+          <div class="system-status">
+            <div id="connection-indicator" class="connection-indicator online">
+              <span class="status-dot"></span>
+              <span id="connection-text">Connected</span>
+            </div>
+            <div id="latency-indicator" class="latency-indicator">
+              Latency: <span id="latency-value">0 ms</span>
+            </div>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button id="theme-toggle-btn" class="icon-btn" title="Toggle theme">
+            <span class="theme-icon theme-icon--dark">🌙</span>
+            <span class="theme-icon theme-icon--light">☀️</span>
+          </button>
+
+          <!-- Clear Chat -->
+          <button id="clear-chat-btn" class="action-btn danger-hover" title="Clear conversation">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round">
+              <polyline points="3,6 4,14 12,14 13,6" />
+              <line x1="1" y1="6" x2="15" y2="6" />
+            </svg>
+            <span>Clear</span>
+          </button>
+
+          <!-- System Menu -->
+          <button id="system-menu-btn" class="icon-btn" title="System menu">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round">
+              <circle cx="8" cy="3" r="1" fill="currentColor" />
+              <circle cx="8" cy="8" r="1" fill="currentColor" />
+              <circle cx="8" cy="13" r="1" fill="currentColor" />
+            </svg>
+          </button>
+
+        </nav>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════════════
+         PERFORMANCE PANEL
+    ══════════════════════════════════════════════════════ -->
+    <div id="performance-panel" class="performance-panel" hidden>
+      <div class="perf-header">System Performance</div>
+      <div class="perf-grid">
+        <div class="perf-item">
+          <div class="perf-label">CPU Usage</div>
+          <div id="cpu-usage" class="perf-value">0%</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Memory</div>
+          <div id="memory-usage" class="perf-value">0 MB</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Tokens/s</div>
+          <div id="token-usage" class="perf-value">0</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-label">Requests</div>
+          <div id="request-count" class="perf-value">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         MAIN CHAT WRAPPER
+    ══════════════════════════════════════════════════════ -->
+    <main class="chat-wrapper" role="main">
+
+      <!-- Chat Container -->
+      <section id="chat-container" class="chat-container" aria-live="polite" aria-label="Chat messages">
+
+        <!-- Welcome Screen (shown when no messages) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-orb"></div>
+          <h2 class="welcome-title">Hello, <span class="welcome-user-name" id="welcome-name">there</span>!</h2>
+          <p class="welcome-sub">Your local AI is ready. Ask anything — code, analysis, creative writing, or just a
+            conversation.</p>
+          <div class="suggestion-grid">
+            <button class="suggestion-card"
+              onclick="document.getElementById('message-input').value=this.dataset.prompt;document.getElementById('message-input').dispatchEvent(new Event('input'));"
+              data-prompt="Explain how neural networks learn from data">
+              <span class="suggestion-icon">🧠</span>
+              Explain how neural networks learn from data
+            </button>
+            <button class="suggestion-card"
+              onclick="document.getElementById('message-input').value=this.dataset.prompt;document.getElementById('message-input').dispatchEvent(new Event('input'));"
+              data-prompt="Write a Python function to sort a list of dicts by a key">
+              <span class="suggestion-icon">💻</span>
+              Write a Python function to sort a list of dicts by a key
+            </button>
+            <button class="suggestion-card"
+              onclick="document.getElementById('message-input').value=this.dataset.prompt;document.getElementById('message-input').dispatchEvent(new Event('input'));"
+              data-prompt="Summarize the key differences between REST and GraphQL">
+              <span class="suggestion-icon">📊</span>
+              Summarize differences between REST and GraphQL
+            </button>
+            <button class="suggestion-card"
+              onclick="document.getElementById('message-input').value=this.dataset.prompt;document.getElementById('message-input').dispatchEvent(new Event('input'));"
+              data-prompt="Write a short sci-fi story set on a space station">
+              <span class="suggestion-icon">✨</span>
+              Write a short sci-fi story set on a space station
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Typing Indicator -->
+      <div id="typing-indicator" class="typing-indicator" hidden>
+        <div class="typing-avatar">✦</div>
+        <div class="typing-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="typing-label">AI is thinking…</span>
+      </div>
+
+      <!-- Scroll to bottom -->
+      <button id="scroll-bottom-btn" class="scroll-bottom-btn" title="Scroll to bottom" hidden>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <polyline points="3,6 8,11 13,6" />
+          <line x1="8" y1="2" x2="8" y2="11" />
+        </svg>
+      </button>
+
+      <!-- Generation Controls -->
+      <div id="generation-controls" class="generation-controls" hidden>
+        <button id="stop-btn" class="stop-btn" aria-label="Stop generation">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+            <rect width="10" height="10" rx="2" />
+          </svg>
+          Stop generating
+        </button>
+        <button id="regenerate-btn" class="action-btn">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <path d="M2 8a6 6 0 0112 0" />
+            <polyline points="14,4 14,8 10,8" />
+          </svg>
+          Regenerate
+        </button>
+      </div>
+
+      <!-- Drop Zone -->
+      <div id="drop-zone" class="drop-zone" hidden>
+        <div class="drop-zone-content">
+          <div class="drop-icon">📂</div>
+          <div class="drop-text">Drop files here</div>
+          <div class="drop-hint">Images, PDF, DOCX, CSV, JSON</div>
+        </div>
+      </div>
+
+      <!-- File Preview Area -->
+      <div id="file-preview-area" class="file-preview-area" hidden>
+        <div id="file-previews" class="file-previews"></div>
+        <div class="file-preview-actions">
+          <button id="clear-files-btn" class="clear-files-btn">Clear Files</button>
+          <button id="upload-files-btn" class="upload-files-btn">Upload</button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           INPUT AREA
+      ════════════════════════════════════════════════════ -->
+      <div class="input-area" role="form" aria-label="Message input">
+
+        <!-- Post-message action bar -->
+        <div id="msg-action-bar" class="msg-action-bar" hidden>
+          <button id="copy-last-btn" class="action-pill-btn">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round">
+              <rect x="5" y="5" width="9" height="9" rx="1" />
+              <path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v2" />
+            </svg>
+            Copy
+          </button>
+          <button id="retry-last-btn" class="action-pill-btn">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round">
+              <path d="M2 8a6 6 0 0112 0" />
+              <polyline points="14,4 14,8 10,8" />
+            </svg>
+            Retry
+          </button>
+          <button id="save-last-btn" class="action-pill-btn">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round">
+              <path d="M8 2v9M5 8l3 3 3-3" />
+              <rect x="2" y="12" width="12" height="2" rx="1" />
+            </svg>
+            Save
+          </button>
+        </div>
+
+        <!-- Input Box -->
+        <div class="input-box" id="input-box">
+
+          <!-- Left -->
+          <div class="input-left-btns">
+            <button id="attach-btn" class="input-icon-btn" title="Attach file">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round">
+                <path d="M13.5 7.5l-6 6a4 4 0 01-5.66-5.66l6-6a2.5 2.5 0 013.54 3.54l-6 6a1 1 0 01-1.42-1.42l5-5" />
+              </svg>
+            </button>
+            <input type="file" id="file-input" accept=".txt,.pdf,.docx,.md,.csv,.json,image/*" multiple hidden>
+            <button id="camera-btn" class="input-icon-btn" title="Upload image">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round">
+                <path d="M1 5a1 1 0 011-1h2l1-2h6l1 2h2a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1V5z" />
+                <circle cx="8" cy="9" r="2.5" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Textarea -->
+          <textarea id="message-input" class="message-input" placeholder="Ask anything…" rows="1" maxlength="8000"
+            autocomplete="off" spellcheck="true"></textarea>
+
+          <!-- Right -->
+          <div class="input-right-btns">
+            <span id="char-counter" class="char-counter">0 / 8000</span>
+            <button id="mic-btn" class="input-icon-btn" title="Voice input">
+              <svg width="14" height="16" viewBox="0 0 14 16" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round">
+                <rect x="4" y="1" width="6" height="9" rx="3" />
+                <path d="M1 8a6 6 0 0012 0" />
+                <line x1="7" y1="14" x2="7" y2="15" />
+              </svg>
+            </button>
+            <button id="send-btn" class="send-btn" title="Send (Enter)" disabled>
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="white" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="10" x2="17" y2="10" />
+                <polyline points="12,5 17,10 12,15" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="input-footer">
+          <div class="input-stats">
+            <span id="token-count">Tokens: 0</span>
+            <span id="response-time">Latency: 0 ms</span>
+          </div>
+          <div class="input-hints">
+            AI Chat Pro ·
+            <kbd>Enter</kbd> send ·
+            <kbd>Shift+Enter</kbd> newline ·
+            <kbd>Ctrl+N</kbd> new chat
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           SETTINGS MODAL
+      ════════════════════════════════════════════════════ -->
+      <div id="settings-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title"
+        hidden>
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2 id="settings-title" class="modal-title">⚙ Settings</h2>
+            <button class="modal-close-btn" data-modal="settings-modal">✕</button>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">AI Model</label>
+            <select id="settings-model" class="settings-select">
+              <option value="llama3">🧠 llama3</option>
+              <option value="mistral">⚡ mistral</option>
+              <option value="phi">💡 phi</option>
+              <option value="mixtral">🚀 mixtral</option>
+            </select>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">Temperature: <span id="temp-value">0.85</span></label>
+            <input type="range" id="settings-temp" min="0" max="2" step="0.05" value="0.85">
+            <div class="range-labels"><span>Precise</span><span>Balanced</span><span>Creative</span></div>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">System Prompt</label>
+            <textarea id="settings-system-prompt" class="settings-textarea" rows="4" maxlength="2000"
+              placeholder="Define AI behavior…"></textarea>
+            <span id="system-prompt-chars" style="font-size:0.65rem;color:var(--t3);float:right;margin-top:4px;">0 /
+              2000</span>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">Theme</label>
+            <div class="theme-options">
+              <button class="theme-btn active" data-theme="dark">🌙 Dark</button>
+              <button class="theme-btn" data-theme="light">☀ Light</button>
+              <button class="theme-btn" data-theme="system">🖥 System</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <label class="settings-label">Performance Mode</label>
+            <select id="performance-mode" class="settings-select">
+              <option value="balanced">Balanced</option>
+              <option value="fast">Fast</option>
+              <option value="accurate">Accurate</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--ghost" data-modal="settings-modal">Cancel</button>
+            <button id="save-settings-btn" class="modal-btn modal-btn--primary">Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           DELETE MODAL
+      ════════════════════════════════════════════════════ -->
+      <div id="delete-modal" class="modal-overlay" role="dialog" aria-modal="true" hidden>
+        <div class="modal-box modal-box--sm">
+          <div class="modal-header">
+            <h2 class="modal-title">Delete Conversation?</h2>
+            <button class="modal-close-btn" data-modal="delete-modal">✕</button>
+          </div>
+          <p class="modal-desc">This conversation will be permanently deleted. This action cannot be undone.</p>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn--ghost" data-modal="delete-modal">Cancel</button>
+            <button id="delete-confirm-btn" class="modal-btn modal-btn--danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           SYSTEM STATUS MODAL
+      ════════════════════════════════════════════════════ -->
+      <div id="system-status-modal" class="modal-overlay" role="dialog" hidden>
+        <div class="modal-box">
+          <div class="modal-header">
+            <h2 class="modal-title">System Status</h2>
+            <button class="modal-close-btn" data-modal="system-status-modal">✕</button>
+          </div>
+          <div class="status-grid">
+            <div class="status-item"><span class="status-label">Server</span><span id="server-status"
+                class="status-value">Online</span></div>
+            <div class="status-item"><span class="status-label">Database</span><span id="db-status"
+                class="status-value">Connected</span></div>
+            <div class="status-item"><span class="status-label">Redis</span><span id="redis-status"
+                class="status-value">Connected</span></div>
+            <div class="status-item"><span class="status-label">AI Model</span><span id="model-status"
+                class="status-value">Ready</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════
+           SHORTCUTS MODAL
+      ════════════════════════════════════════════════════ -->
+      <div id="shortcut-modal" class="modal-overlay" role="dialog" hidden>
+        <div class="modal-box modal-box--sm">
+          <div class="modal-header">
+            <h2 class="modal-title">Keyboard Shortcuts</h2>
+            <button class="modal-close-btn" data-modal="shortcut-modal">✕</button>
+          </div>
+          <ul class="shortcut-list">
+            <li><kbd>Enter</kbd> Send message</li>
+            <li><kbd>Shift + Enter</kbd> New line</li>
+            <li><kbd>Ctrl + N</kbd> New chat</li>
+            <li><kbd>Ctrl + B</kbd> Toggle sidebar</li>
+            <li><kbd>Ctrl + /</kbd> Open shortcuts</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    </main>
+
+  </div><!-- /app-shell -->
+
+  <script src="script.js"></script>
+
+</body>
+
+</html>

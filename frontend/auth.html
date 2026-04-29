@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI Chat Assistant Pro – Sign in or create your account to start chatting with Google Gemini AI." />
+  <title>AI Chat Assistant Pro – Login</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="auth.css" />
+</head>
+
+<body>
+  <!-- Background particles -->
+  <div class="auth-bg" aria-hidden="true">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- Auth Card -->
+  <main class="auth-wrapper" role="main">
+    <div class="auth-card glass" id="auth-card">
+
+      <!-- Logo -->
+      <div class="auth-logo" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#6c63ff"/>
+              <stop offset="100%" stop-color="#00d4ff"/>
+            </linearGradient>
+          </defs>
+          <circle cx="22" cy="22" r="21" fill="url(#logoGrad)" opacity="0.15"/>
+          <path d="M22 6L26.5 16.5L38 18.5L30 26L32 37.5L22 32.5L12 37.5L14 26L6 18.5L17.5 16.5L22 6Z" fill="url(#logoGrad)"/>
+        </svg>
+      </div>
+
+      <h1 class="auth-brand">AI Chat Pro</h1>
+      <p class="auth-tagline">Your intelligent assistant. Powered by Gemini.</p>
+
+      <!-- Tab switcher -->
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Sign In</button>
+        <button class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="panel-register">Create Account</button>
+      </div>
+
+      <!-- ─── LOGIN PANEL ─── -->
+      <div class="auth-panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+        <form id="login-form" novalidate>
+
+          <div class="field-group">
+            <label class="field-label" for="login-email">Email address</label>
+            <div class="field-input-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <input type="email" id="login-email" name="email" class="field-input" placeholder="you@example.com" autocomplete="email" required />
+            </div>
+            <span class="field-error" id="login-email-err"></span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="login-password">Password</label>
+            <div class="field-input-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="login-password" name="password" class="field-input" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="toggle-pw-btn" data-target="login-password" aria-label="Toggle password visibility">
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span class="field-error" id="login-pw-err"></span>
+          </div>
+
+          <div id="login-alert" class="auth-alert" hidden></div>
+
+          <button type="submit" class="auth-submit-btn" id="login-submit-btn">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-spinner" hidden></span>
+          </button>
+
+        </form>
+      </div>
+
+      <!-- ─── REGISTER PANEL ─── -->
+      <div class="auth-panel" id="panel-register" role="tabpanel" aria-labelledby="tab-register">
+        <form id="register-form" novalidate>
+
+          <div class="field-group">
+            <label class="field-label" for="reg-name">Full name</label>
+            <div class="field-input-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="reg-name" name="name" class="field-input" placeholder="John Doe" autocomplete="name" required />
+            </div>
+            <span class="field-error" id="reg-name-err"></span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="reg-email">Email address</label>
+            <div class="field-input-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <input type="email" id="reg-email" name="email" class="field-input" placeholder="you@example.com" autocomplete="email" required />
+            </div>
+            <span class="field-error" id="reg-email-err"></span>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="reg-password">Password</label>
+            <div class="field-input-wrap">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="reg-password" name="password" class="field-input" placeholder="Min. 8 chars, 1 uppercase, 1 number" autocomplete="new-password" required />
+              <button type="button" class="toggle-pw-btn" data-target="reg-password" aria-label="Toggle password visibility">
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="pw-strength" id="pw-strength" hidden>
+              <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
+              <span class="pw-strength-label" id="pw-strength-label"></span>
+            </div>
+            <span class="field-error" id="reg-pw-err"></span>
+          </div>
+
+          <div id="register-alert" class="auth-alert" hidden></div>
+
+          <button type="submit" class="auth-submit-btn" id="register-submit-btn">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-spinner" hidden></span>
+          </button>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <p class="auth-footer-note">
+        By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+      </p>
+
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+</body>
+</html>
